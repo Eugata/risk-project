@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kkcloud.risk.mapper.UpdateDetailNameAllMapper">
+    <update id="updateDetailNames" >
+        UPDATE user_permission_detail
+        SET
+            detail_name = #{new_detail_name} , updated_at = #{updated_at}, updated_by = (SELECT user_name FROM user_login WHERE user_email = #{username})
+        WHERE
+              (detail_name = #{detail_name} AND header_id = #{header_id})
+
+    </update>
+
+<!--    Delete removed for now due to removed delete column-->
+<!--    <select id="deleteChecker" resultType="java.lang.Boolean">-->
+
+<!--        SELECT EXISTS (-->
+<!--                       SELECT-->
+<!--                           1-->
+<!--                       FROM-->
+<!--                           user_permission_detail-->
+<!--                       WHERE-->
+<!--                           detail_name = #{detail_name}-->
+<!--                         AND-->
+<!--                           is_deleted = 0-->
+
+<!--                   ) as boolean-->
+<!--    </select>-->
+
+<!--    <update id="deleteDetailNames" >-->
+<!--    UPDATE user_permission_detail-->
+<!--    SET-->
+<!--    is_deleted = 1 , updated_at = #{updated_at}, updated_by = (SELECT user_name FROM user_login WHERE user_email = #{username})-->
+<!--    WHERE-->
+
+<!--    detail_name = #{detail_name}-->
+<!--    </update>-->
+
+    <select id="updateDetailChecker" resultType="java.lang.Boolean">
+        SELECT EXISTS (
+                       SELECT
+                           detail_name
+                       FROM
+                           user_permission_detail
+                       WHERE
+                           detail_name = #{detail_name}
+                   ) as boolean
+
+    </select>
+
+
+
+
+
+
+</mapper>

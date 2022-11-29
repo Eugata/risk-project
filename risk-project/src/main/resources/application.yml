@@ -1,0 +1,4 @@
+# dev 本地配置，apollo配置
+spring:
+  profiles:
+    active: dev

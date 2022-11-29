@@ -1,0 +1,10 @@
+app:
+  id: kkcloud-risk-management
+apollo:
+  meta: http://172.31.170.4:8080
+  autoUpdateInjectedSpringProperties: true
+  bootstrap:
+    enabled: true
+    eagerLoad:
+      enabled: true
+    namespaces: application

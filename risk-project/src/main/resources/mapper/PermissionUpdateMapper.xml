@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kkcloud.risk.mapper.PermissionUpdateMapper">
+
+    <update id="updateDetails" parameterType="java.util.List">
+        update user_permissions SET is_allowed = #{isAllowed,jdbcType=BOOLEAN}
+        WHERE detail_id = <include refid="detailsID"></include>
+          AND  user_id =  #{userId,jdbcType=INTEGER}
+    </update>
+    <update id="updateHeaderDetails">
+        update user_permission_header SET header_name = #{header_name}, updated_at = #{updated_at}
+        WHERE header_id = #{header_id}
+    </update>
+
+    <select id="validateHeader" resultType="java.lang.Boolean">
+        SELECT EXISTS ( SELECT 1
+                        FROM user_permission_header
+                        WHERE header_id = #{header_id} AND header_name != #{header_name}
+                        AND is_deleted = 0
+                  ) as boolean
+    </select>
+    <select id="validateDeleteHeader" resultType="java.lang.Boolean">
+        SELECT EXISTS ( SELECT 1
+                        FROM user_permission_header
+                        WHERE header_id = #{header_id}
+                        AND is_deleted = 0
+                  ) as boolean
+    </select>
+    <select id="validateExistingDetails" resultType="java.lang.Boolean">
+        SELECT EXISTS ( SELECT 1
+                        FROM user_permissions
+                        WHERE user_id = #{userId,jdbcType=INTEGER}
+                          AND detail_id = <include refid="detailsID"></include>) as boolean
+    </select>
+    <sql id="detailsID">
+        (SELECT detail_id FROM user_permission_detail WHERE detail_name =#{detailsName,jdbcType=VARCHAR} AND header_id = (SELECT header_id FROM user_permission_header WHERE header_name = #{headerName,jdbcType=VARCHAR}))
+
+    </sql>
+
+    <insert id="addPermissionOfUser">
+        INSERT INTO user_permissions
+        (user_id,
+         detail_id,
+         is_allowed,
+         created_at,
+         updated_at,
+         created_by,
+         updated_by)
+        VALUES
+        (#{userId,jdbcType=INTEGER},
+        <include refid="detailsID"></include>,
+         #{isAllowed,jdbcType=BOOLEAN},
+         #{createdAt,jdbcType=DATE},
+         #{updatedAt,jdbcType=DATE},
+         (SELECT user_name FROM user_login WHERE user_email = #{userName,jdbcType=VARCHAR}),
+         (SELECT user_name FROM user_login WHERE user_email = #{userName,jdbcType=VARCHAR}))
+    </insert>
+
+<!--    <update id="deleteHeaderDetails">-->
+<!--        UPDATE-->
+<!--            user_permission_detail, user_permission_header-->
+<!--        SET-->
+<!--            user_permission_header.updated_at = #{updatedAt,jdbcType=DATE},-->
+<!--            user_permission_header.updated_by = #{userName,jdbcType=VARCHAR},-->
+<!--            user_permission_header.is_deleted =  1,-->
+<!--            user_permission_detail.is_allowed = 0,-->
+<!--            user_permission_detail.updated_at = #{updatedAt,jdbcType=DATE},-->
+<!--            user_permission_detail.updated_by = #{userName,jdbcType=VARCHAR},-->
+<!--            user_permission_detail.is_deleted = 1-->
+<!--        WHERE-->
+<!--            user_permission_header.header_id = #{headerId,jdbcType=INTEGER} AND user_permission_detail.header_id = #{headerId,jdbcType=INTEGER}-->
+<!--    </update>-->
+
+
+
+</mapper>

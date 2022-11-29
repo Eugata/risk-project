@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kkcloud.risk.mapper.RiskEntryMapper">
+
+    <resultMap id="riskEntryResultMap" type="com.kkcloud.risk.model.RiskEntry">
+        <result column="entry_id" property="entry_id"/>
+        <result column="member_name" property="member_name"/>
+        <result column="member_account" property="member_account"/>
+        <result column="depositor_name" property="depositor_name"/>
+        <result column="bank_account_no" property="bank_account_no"/>
+        <result column="entry_reason" property="entry_reason"/>
+        <result column="contact_number" property="contact_number"/>
+        <result column="created_at" property="created_at"/>
+        <result column="remarks" property="remarks"/>
+        <result column="risk_id" property="risk_id"/>
+        <result column="created_by" property="created_by"/>
+        <result column="updated_at" property="updated_at"/>
+        <result column="updated_by" property="updated_by"/>
+        <result column="is_deleted" property="is_deleted"/>
+        <result column="risk_name" property="risk_name"/>
+    </resultMap>
+
+    <resultMap id="riskEntryResultByEmail" type="com.kkcloud.risk.model.RiskEntry">
+        <result column="entry_id" property="entry_id"/>
+        <result column="member_name" property="member_name"/>
+        <result column="depositor_name" property="depositor_name"/>
+        <result column="bank_account_no" property="bank_account_no"/>
+        <result column="entry_reason" property="entry_reason"/>
+        <result column="contact_number" property="contact_number"/>
+        <result column="remarks" property="remarks"/>
+        <result column="risk_name" property="risk_name"/>
+        <result column="risk_id" property="risk_id"/>
+    </resultMap>
+
+    <resultMap id="duplicateRiskEntryResultMap" type="com.kkcloud.risk.dto.RiskEntryDuplicateDTO">
+        <result column="entry_id" property="entry_id"/>
+        <result column="member_account" property="member_account"/>
+    </resultMap>
+
+    <resultMap id="dupRiskEntryMemAcc" type="com.kkcloud.risk.dto.RiskEntryDTO">
+        <result column="entry_id" property="entry_id"/>
+    </resultMap>
+
+    <select id="getById" resultMap="riskEntryResultMap" parameterType="java.lang.Integer">
+        SELECT *
+        FROM risk_entry
+        WHERE entry_id = #{entryId}
+    </select>
+
+    <!--to insert new risk entry-->
+    <insert id="addRiskEntry" parameterType="com.kkcloud.risk.model.RiskEntry">
+        insert into risk_entry (member_name, member_account, depositor_name, bank_account_no,
+                                entry_reason, contact_number, created_at, remarks, risk_id, created_by,
+                                updated_at, updated_by, is_deleted)
+        values (#{member_name}, #{member_account}, #{depositor_name}, #{bank_account_no},
+                #{entry_reason}, #{contact_number}, #{created_at}, #{remarks}, #{risk_id}, #{created_by},
+                #{created_at}, null, 0)
+    </insert>
+
+    <select id="getLatestRowId" resultMap="riskEntryResultMap">
+        SELECT *
+        FROM risk_entry
+        WHERE entry_id = (SELECT MAX(entry_id) FROM risk_entry as r)
+    </select>
+
+    <select id="checkDuplicateRiskEntry" resultMap="dupRiskEntryMemAcc" parameterType="java.lang.String">
+        SELECT r.entry_id
+        FROM risk_entry AS r
+        WHERE r.member_account = #{member_account} and is_deleted != 1
+    </select>
+
+    <update id="overwriteDuplicateRow" parameterType="com.kkcloud.risk.model.RiskEntry">
+        UPDATE risk_entry
+        SET member_name     = #{member_name},
+            member_account  = #{member_account},
+            depositor_name  = #{depositor_name},
+            bank_account_no = #{bank_account_no},
+            entry_reason    = #{entry_reason},
+            contact_number  = #{contact_number},
+            created_at      = #{created_at},
+            remarks         = #{remarks},
+            risk_id         = #{risk_id},
+            created_by      = #{created_by},
+            updated_at      = #{created_at},
+            updated_by      = #{created_by},
+            is_deleted      = 0
+        WHERE entry_id = #{entry_id}
+    </update>
+
+    <update id="deleteRiskEntry" parameterType="com.kkcloud.risk.dto.ViewDetailDTO">
+        UPDATE risk_entry
+        SET updated_by = #{updated_by},
+            updated_at = #{updated_at},
+            is_deleted = 1
+        WHERE entry_id = #{entry_id}
+    </update>
+
+    <!-- For Update Risk_Entry -->
+    <update id="updateRiskEntry" parameterType="com.kkcloud.risk.dto.RiskEntryLogUpdateDTO">
+        UPDATE risk_entry
+        SET member_name     = #{member_name},
+            depositor_name  = #{depositor_name},
+            bank_account_no = #{bank_account_no},
+            entry_reason    = #{entry_reason},
+            contact_number  = #{contact_number},
+            remarks         = #{remarks},
+            risk_id         = #{risk_id},
+            updated_at      = #{updated_at},
+            updated_by      = (SELECT user_name FROM user_login WHERE user_email = #{user_email}),
+            is_deleted      = 0
+        WHERE entry_id = #{entry_id}
+    </update>
+
+    <!-- Update Entry Logs -->
+    <insert id="updateEntryLog" parameterType="com.kkcloud.risk.dto.RiskEntryLogUpdateDTO">
+        INSERT INTO entry_logs (entry_id, user_id, operation, field_type, before_value,
+                                updated_value, updated_date, created_date, audit_id)
+        VALUES (#{entry_id}, (SELECT user_id
+                              FROM user_login
+                              WHERE user_email = #{user_email}), "update", #{field_type}, #{before_value},
+                #{updated_value},
+                #{updated_at}, now(), #{audit_id})
+    </insert>
+
+    <select id="entryLogsAuditId" resultType="java.lang.Integer">
+        SELECT MAX(audit_id) AS audit_id
+        FROM entry_logs
+    </select>
+
+    <select id="findByUser" resultMap="riskEntryResultByEmail">
+        SELECT DISTINCT risk_entry.entry_id        as entry_id,
+                        risk_entry.member_name     as member_name,
+                        risk_entry.member_account  as member_account,
+                        risk_entry.depositor_name  as depositor_name,
+                        risk_entry.bank_account_no as bank_account_no,
+                        risk_entry.entry_reason    as entry_reason,
+                        risk_entry.contact_number  as contact_number,
+                        risk_entry.remarks         as remarks,
+                        risk_type.risk_name        as risk_name,
+                        risk_entry.risk_id         as risk_id
+        FROM risk_entry
+                 LEFT JOIN entry_logs as entry_logs ON risk_entry.entry_id = entry_logs.entry_id
+                 LEFT JOIN risk_type as risk_type ON risk_entry.risk_id = risk_type.risk_id
+        WHERE risk_entry.entry_id = #{entry_id}
+    </select>
+
+    <select id="checkIfDeleted" resultType="java.lang.Boolean">
+        SELECT EXISTS(
+                       SELECT 1
+                       FROM risk_entry
+                       WHERE entry_id = #{entry_id}
+                         AND is_deleted = 1
+                   ) as boolean
+    </select>
+
+</mapper>

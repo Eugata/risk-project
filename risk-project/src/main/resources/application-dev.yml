@@ -1,0 +1,11 @@
+apollo:
+  meta: http://apollo.configservice.skgbwdev.com:18080
+configService:
+  config:
+    configServiceUrlOverride: http://apollo.configservice.skgbwdev.com:18080
+  http:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+

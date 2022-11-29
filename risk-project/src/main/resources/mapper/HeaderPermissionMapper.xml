@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kkcloud.risk.mapper.HeaderPermissionMapper">
+
+    <resultMap id="ResultMap" type="com.kkcloud.risk.model.PermissionHeader">
+
+        <result column="header_name" property="header_name"/>
+
+    </resultMap>
+
+    <select id="findById" resultMap="ResultMap">
+        SELECT DISTINCT user_permission_header.header_name
+        FROM user_login
+        INNER JOIN user_permissions ON user_login.user_id = user_permissions.user_id
+        INNER JOIN user_permission_detail ON user_permission_detail.detail_id = user_permissions.detail_id
+        INNER JOIN user_permission_header ON user_permission_detail.header_id = user_permission_header.header_id
+        <where>
+
+        <if test="header_id != null and header_id !=''">
+            and user_permission_header.header_id = #{header_id}
+        </if>
+
+        <if test="user_id != null and user_id !=''">
+            and user_login.user_id = #{user_id}
+        </if>
+
+        </where>
+
+    </select>
+
+</mapper>

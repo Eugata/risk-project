@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.kkcloud.risk.mapper.LoginMapper">
+    <resultMap id="userRegister" type="com.kkcloud.risk.dto.LoginDTO">
+        <result column="user_name" property="user_email"/>
+        <result column="user_password" property="user_password"/>
+        <result column="created_at" property="createdDate"/>
+        <result column="updated_at" property="updatedDate"/>
+    </resultMap>
+
+    <select id="loginUser1" resultMap="userRegister">
+        select user_name, user_password, created_at, updated_at from user_login where user_login.user_name = #{user_name}  and user_login.user_password = #{user_password}
+    </select>
+
+    <resultMap id="username" type="com.kkcloud.risk.model.User">
+        <result column="user_id" property="id"/>
+        <result column="user_name" property="userName"/>
+        <result column="user_email" property="userEmail"/>
+        <result column="user_password" property="password"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="updated_by" property="updatedBy"/>
+    </resultMap>
+
+    <resultMap id="userResult" type="java.lang.Integer">
+        <result column="user_count" property="user_count"/>
+    </resultMap>
+
+    <select id="findByUsername" resultMap="username">
+        SELECT
+            user_id,
+            user_name,
+            user_password,
+            created_at,
+            updated_at
+        FROM
+            user_login
+        WHERE
+            user_email = #{user_email}
+        AND
+            is_deleted = 0
+
+    </select>
+
+    <insert id="addUser">
+        INSERT INTO user_login
+            (
+             user_id,
+             user_name,
+             user_email,
+             user_password,
+             created_at,
+             updated_at,
+             created_by,
+             updated_by
+             )
+        VALUES
+            (
+             #{id},
+             #{userName},
+             #{userEmail},
+             #{password},
+             #{createdAt},
+             #{updatedAt},
+             #{createdBy},
+             #{updatedBy}
+            )
+
+
+    </insert>
+
+    <select id="findAllUsers" resultMap="username">
+        SELECT
+            user_id,
+            user_name,
+            user_password,
+            user_email,
+            created_at,
+            created_by,
+            updated_by,
+            updated_at
+        FROM
+            user_login
+        WHERE
+            is_deleted = 0
+    </select>
+
+    <select id="existByUserName" resultType="java.lang.Boolean">
+      SELECT EXISTS (
+                 SELECT
+                    1
+                FROM
+                    user_login
+                WHERE
+                    user_email = #{user_email}
+                AND
+                    is_deleted = 0
+        ) as boolean
+    </select>
+
+    <update id="updateUser">
+        UPDATE
+            user_login
+        SET
+        <if test="userName != null">
+            user_name = #{userName},
+        </if>
+            user_password = #{password},
+            user_email = #{userEmail},
+            updated_at = #{updatedAt},
+            is_deleted = #{deleted},
+            updated_by = #{updatedBy}
+        <if test="createdBy != null">
+            created_by = #{createdBy},
+        </if>
+        WHERE
+            user_email = #{userEmail}
+    </update>
+
+<!--    <update id="deleteUser">-->
+<!--        UPDATE-->
+<!--            user_login-->
+<!--        SET-->
+<!--            is_deleted = #{deleted}-->
+<!--        WHERE-->
+<!--            user_email = #{userEmail}-->
+<!--    </update>-->
+
+    <update id="deleteUser" parameterType="com.kkcloud.risk.dto.ViewUserDetailDTO">
+        UPDATE user_login
+        SET updated_by = #{updated_by},
+            updated_at = #{updated_at},
+            is_deleted = 1
+        <where>
+            <if test='user_email != null and user_email != "" '>
+             and user_email = #{user_email}
+            </if>
+
+            <if test="user_id != 0">
+            and user_id = #{user_id}
+            </if>
+        </where>
+    </update>
+
+
+    <!-- ****-->
+    <select id="checkIfIDExist" parameterType="java.lang.Integer" resultType="java.lang.Boolean">
+        SELECT EXISTS(
+            SELECT 1
+            FROM user_login
+            WHERE user_id = #{user_id}
+              AND is_deleted = 0)
+            as Boolean
+    </select>
+
+    <select id="checkByEmail" parameterType="java.lang.String" resultType="java.lang.Boolean">
+        SELECT EXISTS(
+                       SELECT 1
+                       FROM user_login
+                       WHERE user_email = #{user_email}
+                         AND is_deleted = 0)
+                   as Boolean
+    </select>
+
+    <select id="getUserTotal" resultMap="userResult">
+        SELECT COUNT(*) as user_count
+        FROM user_login
+        WHERE is_deleted = 0
+    </select>
+
+</mapper>
+

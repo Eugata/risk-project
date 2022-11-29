@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kkcloud.risk.mapper.EntryLogMapper">
+
+    <resultMap id="entryLogResultMap" type="com.kkcloud.risk.model.EntryLog">
+        <result column="log_id" property="log_id" />
+        <result column="entry_id" property="entry_id" />
+        <result column="user_id" property="user_id" />
+        <result column="operation" property="operation" />
+        <result column="field_type" property="field_type" />
+        <result column="before_value" property="before_value" />
+        <result column="updated_value" property="updated_value" />
+        <result column="created_date" property="created_date" />
+        <result column="updated_date" property="updated_date" />
+        <result column="audit_id" property="audit_id" />
+    </resultMap>
+
+    <insert id="addEntryLog" parameterType="com.kkcloud.risk.dto.ViewDetailDTO">
+        INSERT INTO entry_logs (entry_id, user_id, operation, field_type, before_value,
+                                updated_value, created_date, updated_date, audit_id)
+        VALUES (#{entry_id}, (SELECT user_id FROM user_login
+               WHERE user_email=#{user_email}), #{operation}, null, null, null,
+               (SELECT r.created_at FROM risk_entry AS r WHERE r.entry_id = #{entry_id}),
+               (SELECT r.created_at FROM risk_entry AS r WHERE r.entry_id = #{entry_id}),
+               #{audit_id})
+    </insert>
+
+    <insert id="deletedEntryLog" parameterType="com.kkcloud.risk.dto.ViewDetailDTO">
+        INSERT INTO entry_logs (entry_id, user_id, operation, field_type, before_value,
+                                updated_value, created_date, updated_date, audit_id)
+        VALUES ((SELECT entry_id FROM risk_entry WHERE entry_id=#{entry_id}),
+               (SELECT user_id FROM user_login WHERE user_email=#{user_email}), "delete", null,
+               null, null, (SELECT created_at FROM risk_entry WHERE entry_id=#{entry_id}),
+               (SELECT updated_at FROM risk_entry WHERE entry_id=#{entry_id}),
+               #{audit_id})
+    </insert>
+
+    <select id="getEntryLogTable" resultMap="entryLogResultMap">
+        SELECT * FROM entry_logs
+    </select>
+
+    <insert id="addDupUpdateLog" parameterType="com.kkcloud.risk.dto.EntryLogDTO">
+        INSERT INTO entry_logs (entry_id, user_id, operation, field_type, before_value,
+                                updated_value, created_date, updated_date, audit_id)
+        VALUES (#{entry_id}, #{user_id}, #{operation}, #{field_type}, #{before_value}, #{updated_value},
+                (SELECT r.created_at FROM risk_entry AS r WHERE r.entry_id = #{entry_id}),
+                #{updated_date}, #{audit_id})
+    </insert>
+
+    <select id="getCurrentUserId" parameterType="java.lang.String" resultType="java.lang.Integer">
+        SELECT user_id
+        FROM user_login
+        WHERE user_email = #{user_email}
+    </select>
+
+</mapper>
